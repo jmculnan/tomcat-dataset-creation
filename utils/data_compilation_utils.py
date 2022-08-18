@@ -54,13 +54,16 @@ class ToMCATSentEmoPrep:
                 csv_name = item.rsplit("/", 1)[0]
 
                 csv_name_info = csv_name.split("_")
-                trial_id = csv_name_info[2][-7:]
-                team_id = csv_name_info[3][-8:]
+                trial_id = csv_name_info[3][-7:]
+                team_id = csv_name_info[4][-8:]
 
                 data = pd.read_csv(f"{self.annotations_dir}/{item}")
 
                 data['trial_id'] = trial_id
                 data['team_id'] = team_id
+
+                data = self._remove_unlabeled(data)
+                data = self._fix_labels(data)
 
                 if all_files is None:
                     all_files = data
@@ -71,6 +74,33 @@ class ToMCATSentEmoPrep:
         all_files.to_csv(f"{self.base_dir}/all_sent-emo.csv", index=False)
 
         return all_files
+
+    def _remove_unlabeled(self, df):
+        """
+        Remove the rows without labels for sentiment/emotion
+        :param df:
+        :return:
+        """
+        df.dropna(subset = ["emotion", "sentiment"], inplace=True)
+
+        df = df[(df["emotion"] != "0") & (df["sentiment"] != "0")]
+
+        return df
+
+    def _fix_labels(self, df):
+        df['emotion'] = df['emotion'].apply(lambda x: str(x).strip())
+        df['sentiment'] = df['sentiment'].apply(lambda x: str(x).strip())
+
+        errors = {"angry": "anger", 'neural': 'neutral', 'neutrl': 'neutral', "suprise": "surprise",
+                  "sadeness": "sadness", "netural": "neutral", "negatve": "negative",
+                  "positie": "positive", "negatie": "negative", "poitive": "positive",
+                  "nutral": "neutral", "neative": "negative", "postive": "positive",
+                  "postivie": "positive", "n": "neutral", "netral": "neutral", "negtive": "negative"}
+
+        df["emotion"] = df["emotion"].apply(lambda x: errors[x] if x in errors.keys() else x)
+        df["sentiment"] = df["sentiment"].apply(lambda x: errors[x] if x in errors.keys() else x)
+
+        return df
 
     def read_in_tipi(self):
         all_tipi = None
@@ -101,3 +131,19 @@ class ToMCATSentEmoPrep:
         Get class counts for all personality trait classes in the data
         """
         return all_data['trait'].value_counts()
+
+
+if __name__ == "__main__":
+    # read in files
+    base = "/media/jculnan/backup/jculnan/datasets/asist_data2"
+
+    prep_obj = ToMCATSentEmoPrep(base)
+
+    #prep_obj.combine_corrected_and_annotated()
+    all_files = prep_obj.combine_files()
+    emos = prep_obj.count_all_emotions(all_files)
+    sents = prep_obj.count_all_sentiments(all_files)
+    print("Emotion counts by class: ")
+    print(emos)
+    print("Sentiment counts by class: ")
+    print(sents)
