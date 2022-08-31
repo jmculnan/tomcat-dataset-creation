@@ -80,4 +80,4 @@ if __name__ == "__main__":
 
     # combine
     id_df2 = add_traits_to_id_df(id_df, df)
-    id_df2.to_csv("/home/jculnan/asist_data/personality/personality_traits_with_participant_info.csv", index=False)
+    id_df2.to_csv("/home/jculnan/asist_data/personality/personality_traits_for_all_participants.csv", index=False)
