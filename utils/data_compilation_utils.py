@@ -1,5 +1,6 @@
 import pandas as pd
 import sys, os
+from pathlib import Path
 
 
 class ToMCATSentEmoPrep:
@@ -131,6 +132,30 @@ class ToMCATSentEmoPrep:
         Get class counts for all personality trait classes in the data
         """
         return all_data['trait'].value_counts()
+
+
+class ToMCATDatasetPrep:
+    def __init__(self, basedir, sent_emo_ext=None, da_ext=None):
+        self.base = Path(basedir)
+        if sent_emo_ext is not None:
+            self.sentemo_dir = basedir / sent_emo_ext
+        else:
+            self.sentemo_dir = basedir / "sent-emo"
+
+        if da_ext is not None:
+            self.da_dir = basedir / da_ext
+        else:
+            self.da_dir = basedir / "da"
+
+    def _merge_files(self):
+        """
+        Merge all possible files
+        :return:
+        """
+        for f in self.sentemo_dir.iterdir():
+            if f.suffix == ".csv":
+                name = f.name
+
 
 
 if __name__ == "__main__":
