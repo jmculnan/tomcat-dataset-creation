@@ -1,7 +1,8 @@
 # used for splitting large audio files into utterance-length files
 import os
 import subprocess as sp
-
+from pathlib import Path
+import pandas as pd
 
 def extract_portions_of_mp4_or_wav(
     path_to_sound_file,
@@ -51,10 +52,37 @@ def extract_portions_of_mp4_or_wav(
     return save_name
 
 
-def split_wavs_into_utterances(path_to_sound_files, df_with_timestamps):
+def split_wav_into_utterances(path_to_sound_file, sound_file, wav_level_df):
     """
     Take a series of wav files and split into a group of utterance-level wav files
     :param path_to_sound_files:
     :param df_with_timestamps: A dataframe including timestamps and utterance IDs
     :return:
     """
+    row_names = wav_level_df["message_id"].tolist()
+    start_times = wav_level_df["start_timestamp"].tolist()
+    end_timestamp = wav_level_df["end_timestamp"].tolist()
+
+    for i, item in enumerate(row_names):
+        extract_portions_of_mp4_or_wav(path_to_sound_file, sound_file,
+                                       start_times[i], end_timestamp[i],
+                                       save_path=f"{path_to_sound_file}/../split",
+                                       short_file_name=item)
+
+
+def split_wavs_into_utterances(path_to_sound_files, df_with_timestamps):
+    all_trials = df_with_timestamps["trial_id"].toset()
+
+    filespath = Path(path_to_sound_files)
+    for item in filespath.iterdir():
+        if item.suffix == ".wav":
+            wav_trial = item.split("/")[-1].split("_")[2].split("-")[1]
+            if wav_trial in all_trials:
+                short_df = df_with_timestamps[df_with_timestamps["trial_id"] == wav_trial]
+                split_wav_into_utterances(item.parents[0], item.name, short_df)
+
+
+if __name__ == "__main__":
+    base_path = "/media/jculnan/backup/jculnan/datasets/asist_data2"
+    wav_path = f"{base_path}/audio"
+    df = pd.read_csv(f"{base_path}/all_sent-emo.csv")
