@@ -138,37 +138,66 @@ class ToMCATDatasetPrep:
     def __init__(self, basedir, sent_emo_ext=None, da_ext=None):
         self.base = Path(basedir)
         if sent_emo_ext is not None:
-            self.sentemo_dir = basedir / sent_emo_ext
+            self.sentemo_dir = self.base / sent_emo_ext
         else:
-            self.sentemo_dir = basedir / "sent-emo"
+            self.sentemo_dir = self.base / "sent-emo"
 
         if da_ext is not None:
-            self.da_dir = basedir / da_ext
+            self.da_dir = self.base / da_ext
         else:
-            self.da_dir = basedir / "da"
+            self.da_dir = self.base / "da"
+
+        self.merged = self._merge_files()
 
     def _merge_files(self):
         """
         Merge all possible files
-        :return:
+        :return: dict of fname: df for combined da and sent-emo files
         """
+        merged = {}
+
+        da_names = [f.name for f in self.da_dir.iterdir() if f.is_file()]
+
         for f in self.sentemo_dir.iterdir():
             if f.suffix == ".csv":
-                name = f.name
+                name = "_".join(f.name.split("_")[1:])
+                if name in da_names:
+                    sentemo = pd.read_csv(f)
+                    sentemo = sentemo[["utt", "participant", "message_id", "sentiment", "emotion", ]]
+                    da = pd.read_csv(self.da_dir / name)
+
+                    if "message_id" in da.columns:
+                        combined = da.merge(sentemo, on=["utt", "participant", "message_id"])
+                    else:
+                        combined = da.merge(sentemo, on=["utt", "participant"])
+
+                    merged[name] = combined
+
+        return merged
+
+    def save_merged(self):
+        for k, v in self.merged.items():
+            v.to_csv(self.base / f"combined/{k}", index=False)
 
 
 
 if __name__ == "__main__":
-    # read in files
+    # # read in files
+    # base = "/media/jculnan/backup/jculnan/datasets/asist_data2"
+    #
+    # prep_obj = ToMCATSentEmoPrep(base)
+    #
+    # #prep_obj.combine_corrected_and_annotated()
+    # all_files = prep_obj.combine_files()
+    # emos = prep_obj.count_all_emotions(all_files)
+    # sents = prep_obj.count_all_sentiments(all_files)
+    # print("Emotion counts by class: ")
+    # print(emos)
+    # print("Sentiment counts by class: ")
+    # print(sents)
+
+    # get base directory
     base = "/media/jculnan/backup/jculnan/datasets/asist_data2"
 
-    prep_obj = ToMCATSentEmoPrep(base)
-
-    #prep_obj.combine_corrected_and_annotated()
-    all_files = prep_obj.combine_files()
-    emos = prep_obj.count_all_emotions(all_files)
-    sents = prep_obj.count_all_sentiments(all_files)
-    print("Emotion counts by class: ")
-    print(emos)
-    print("Sentiment counts by class: ")
-    print(sents)
+    prep_obj = ToMCATDatasetPrep(base)
+    prep_obj.save_merged()
