@@ -1,7 +1,7 @@
 import pandas as pd
 import sys, os
 from pathlib import Path
-
+import re
 
 class ToMCATSentEmoPrep:
     def __init__(self, base_dir):
@@ -161,17 +161,48 @@ class ToMCATDatasetPrep:
         for f in self.sentemo_dir.iterdir():
             if f.suffix == ".csv":
                 name = "_".join(f.name.split("_")[1:])
+                if "T0006" in name and "Vers-1" in name:
+                    re.sub("Vers-1", "Vers-6", name)
+                print(name)
                 if name in da_names:
                     sentemo = pd.read_csv(f)
-                    sentemo = sentemo[["utt", "participant", "message_id", "sentiment", "emotion", ]]
+                    sentemo = sentemo[["utt", "participant", "message_id", "sentiment", "emotion"]]
                     da = pd.read_csv(self.da_dir / name)
+                    if "message_id" not in da.columns:
+                        pass
 
-                    if "message_id" in da.columns:
-                        combined = da.merge(sentemo, on=["utt", "participant", "message_id"])
-                    else:
-                        combined = da.merge(sentemo, on=["utt", "participant"])
+                    # cannot use df.merge because of multiple identical rows without message_id
+                    da['sentiment'] = None
+                    da['emotion'] = None
+                    if "message_id" not in da.columns:
+                        da['message_id'] = None
 
-                    merged[name] = combined
+                    # ordered_utt = sentemo["utt"].tolist()
+                    ordered_sent = sentemo["sentiment"].tolist()
+                    ordered_emo = sentemo["emotion"].tolist()
+                    ordered_msg = sentemo["message_id"].tolist()
+
+                    for row in da.itertuples():
+                        if row.message_id in ordered_msg:
+                            idx = ordered_msg.index(row.message_id)
+                            da.at[row.Index, 'sentiment'] = ordered_sent[idx]
+                            da.at[row.Index, 'emotion'] = ordered_emo[idx]
+                            if "message-id" not in da.columns:
+                                da.at[row.Index, 'message_id'] = ordered_msg[idx]
+
+                        # if not pd.isnull(row.utt):
+                        #     if row.utt.strip() == ordered_utt[position].strip():
+                        #         da.at[row.Index, 'sentiment'] = ordered_sent[position]
+                        #         da.at[row.Index, 'emotion'] = ordered_emo[position]
+                        #         if "message-id" not in da.columns:
+                        #             da.at[row.Index, 'message_id'] = ordered_msg[position]
+                        #
+                        #         if position < len(ordered_utt) - 1:
+                        #             position += 1
+                        #         else:
+                        #             break
+
+                    merged[name] = da
 
         return merged
 
