@@ -61,7 +61,7 @@ def add_traits_to_id_df(id_df, tipi_df):
     Add personality trait scores to the df containing
     info on each participant (ID, role, team, trials)
     """
-    tipi_df2 = tipi_df[['participantid', 'max_trait']]
+    tipi_df2 = tipi_df[['participantid', 'max_trait', 'extroversion', 'agreeableness', 'conscientiousness', 'neuroticism', 'openness']]
 
     id_df = id_df.merge(tipi_df2, on="participantid")
 
@@ -75,9 +75,9 @@ if __name__ == "__main__":
 
     df = preprocess_tipi(gold_data)
 
-    id_path = "/home/jculnan/asist_data/participant_to_role.csv"
+    id_path = "/media/jculnan/backup/jculnan/datasets/asist_data2/participant_info.csv"
     id_df = pd.read_csv(id_path)
 
     # combine
     id_df2 = add_traits_to_id_df(id_df, df)
-    id_df2.to_csv("/home/jculnan/asist_data/personality/personality_traits_for_all_participants.csv", index=False)
+    id_df2.to_csv("/media/jculnan/backup/jculnan/datasets/asist_data2/personality_traits_for_all_participants.csv", index=False)
