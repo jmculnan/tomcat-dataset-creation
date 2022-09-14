@@ -2,7 +2,41 @@ from pathlib import Path
 import pandas as pd
 import re
 
-def update_vers3_file(vers3_df, vers6_df, saved_name):
+def update_vers3_file_sentemo(vers3_df, vers6_df, saved_name):
+    """
+    Adding corrected information to annotations done on a vers-3 file
+    Note: we cannot simply merge the two dfs because there are
+    multiple instances of the same utterances, and this throws
+    off the results--we need to preserve the order of utterances
+    :param vers3_df:
+    :param vers6_df:
+    :return:
+    """
+    vers3_short = vers3_df[["utt", "sentiment", "emotion"]]
+    vers3_short = vers3_short[~vers3_short["sentiment"].isna()]
+
+    ordered_utt = vers3_short["utt"].tolist()
+    ordered_sent = vers3_short["sentiment"].tolist()
+    ordered_emo = vers3_short["emotion"].tolist()
+
+    vers6_df['sentiment'] = None
+    vers6_df['emotion'] = None
+
+    position = 0
+    for row in vers6_df.itertuples():
+        if row.utt == ordered_utt[position]:
+            vers6_df.set_value(row.Index, 'sentiment', ordered_sent[position])
+            vers6_df.set_value(row.Index, 'emotion', ordered_emo[position])
+
+            if position < len(ordered_utt) - 1:
+                position += 1
+            else:
+                break
+
+    vers6_df.to_csv(saved_name, index=False)
+
+
+def update_vers3_file_da(vers3_df, vers6_df, saved_name):
     """
     Adding corrected information to annotations done on a vers-3 file
     Note: we cannot simply merge the two dfs because there are
