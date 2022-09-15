@@ -57,12 +57,3 @@ def get_sec(time_str):
     else:
         # sometimes string has trailing 0s--ignore these
         return 60 * int(time_components[0]) + float(time_components[1])
-
-
-if __name__ == "__main__":
-    # contains columns:  team_id	trial_id	participantid	participant_role	role_name	max_trait
-    tipi_path = "/media/jculnan/backup/jculnan/asist_data/personality/personality_traits_with_participant_info.csv"
-    tipi = pd.read_csv(tipi_path)
-    sent_path = "/home/jculnan/asist_data/sent-emo/for_PI_meeting_07.22"
-
-    combine_group_of_sent_df_with_personality(sent_path, tipi)

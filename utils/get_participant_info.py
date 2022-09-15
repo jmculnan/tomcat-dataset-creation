@@ -1,5 +1,6 @@
 # get participant information from the .metadata files
 import json
+import logging
 from pathlib import Path
 
 
@@ -28,9 +29,6 @@ class MetadataToParticipantInfo:
                     thedata = theline['data']
 
                     # get relevant info from this
-                    # map = thedata['map_name']
-                    # condition = thedata['condition']
-                    # exp = thedata['experiment_name']
                     try:
                         team, exp = thedata['name'].split("_")
                     except ValueError:
@@ -41,7 +39,6 @@ class MetadataToParticipantInfo:
                         else:
                             print(splitname)
                             exit()
-                    # agent = thedata['intervention_agents']
 
                     players = thedata['client_info']
                     for player in players:
@@ -51,18 +48,6 @@ class MetadataToParticipantInfo:
                         participant_info.append([team, exp, p_id, p_name])
 
                     break
-
-                    # p1_id = players[0]['participant_id']
-                    # p1_name = players[0]['playername']
-                    # p2_id = players[1]['participant_id']
-                    # p2_name = players[1]['playername']
-                    # p3_id = players[2]['participant_id']
-                    # p3_name = players[2]['playername']
-
-
-
-                    # participant_info = [team, exp, p1_id, p1_name, p2_id, p2_name,
-                    #                     p3_id, p3_name, map, condition, agent]
 
         return participant_info
 
@@ -82,6 +67,21 @@ class MetadataToParticipantInfo:
 
         return all_participant_info
 
+    def return_trial_player_dict(self, participant_info):
+        """
+        Return a dict of Trial_ID: {Playername: Participant ID}
+        Used in conjunction with data compilation utils
+        To switch out player names for participant IDs
+        :return:
+        """
+        tp_dict = {}
+        if type(participant_info[0][0] == list):
+            for trial in participant_info:
+                for part in trial:
+                    tp_dict[part[1]] = {part[3]: part[2]}
+
+        return tp_dict
+
     def save_participant_info(self, participant_info, save_location):
         """
         Save extracted participant information
@@ -95,13 +95,3 @@ class MetadataToParticipantInfo:
                 for player_info in p_info:
                     f.write(",".join(player_info))
                     f.write("\n")
-
-
-if __name__ == "__main__":
-    json_path = "/home/jculnan/asist_data/metadata"
-    save_file = "/media/jculnan/backup/jculnan/datasets/asist_data2/participant_info.csv"
-
-    partinfo = MetadataToParticipantInfo(json_path)
-
-    all_part_info = partinfo.get_info_on_multiple_trials()
-    partinfo.save_participant_info(all_part_info, save_file)

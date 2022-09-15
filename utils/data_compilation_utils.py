@@ -226,9 +226,4 @@ if __name__ == "__main__":
     # print(emos)
     # print("Sentiment counts by class: ")
     # print(sents)
-
-    # get base directory
-    base = "/media/jculnan/backup/jculnan/datasets/asist_data2"
-
-    prep_obj = ToMCATDatasetPrep(base)
-    prep_obj.save_merged()
+    pass
