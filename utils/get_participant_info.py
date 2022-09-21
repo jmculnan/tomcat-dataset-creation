@@ -63,7 +63,9 @@ class MetadataToParticipantInfo:
         for f in Path(self.base_path).iterdir():
             if f.suffix == ".metadata":
                 p_info = self._get_participant_info(str(f))
-                all_participant_info.append(p_info)
+                all_participant_info.extend(p_info)
+            else:
+                print(f"{f} not added to participant info")
 
         return all_participant_info
 
@@ -75,10 +77,12 @@ class MetadataToParticipantInfo:
         :return:
         """
         tp_dict = {}
-        if type(participant_info[0][0] == list):
+        if type(participant_info[0] == list):
             for trial in participant_info:
-                for part in trial:
-                    tp_dict[part[1]] = {part[3]: part[2]}
+                if trial[1] not in tp_dict.keys():
+                    tp_dict[trial[1]] = {trial[3]: trial[2]}
+                else:
+                    tp_dict[trial[1]][trial[3]] = trial[2]
 
         return tp_dict
 

@@ -62,6 +62,10 @@ def add_traits_to_id_df(id_df, tipi_df):
     info on each participant (ID, role, team, trials)
     """
     tipi_df2 = tipi_df[['participantid', 'max_trait', 'extroversion', 'agreeableness', 'conscientiousness', 'neuroticism', 'openness']]
+    print(tipi_df2)
+    print(type(tipi_df2))
+    print(id_df)
+    print(type(id_df))
 
     id_df = id_df.merge(tipi_df2, on="participantid")
 

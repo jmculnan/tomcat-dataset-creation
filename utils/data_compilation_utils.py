@@ -206,6 +206,25 @@ class ToMCATDatasetPrep:
 
         return merged
 
+    def convert_values(self, conversion_dict):
+        """
+        Convert playernames to participant IDs
+        :param conversion_dict:
+        :return:
+        """
+        for k, v in self.merged.items():
+            trial = k.split("_")[2].split("-")[-1]
+            if trial not in conversion_dict.keys():
+                if trial == "T000607":
+                    conv = conversion_dict["T000608"]
+                elif trial == "T000633":
+                    conv = conversion_dict["T000634"]
+                else:
+                    exit(f"Trial {trial} not found")
+            else:
+                conv = conversion_dict[trial]
+            v['participant'] = v['participant'].apply(lambda x: conv[x])
+
     def save_merged(self):
         for k, v in self.merged.items():
             v.to_csv(self.base / f"combined/{k}", index=False)
