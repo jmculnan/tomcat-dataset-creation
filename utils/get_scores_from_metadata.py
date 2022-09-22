@@ -56,12 +56,8 @@ def save_scores(list_of_scores, save_path=None):
         scores.to_csv("/media/jculnan/backup/jculnan/datasets/asist_data2/scores.csv", index=False)
 
 
-
-
-
 if __name__ == "__main__":
     meta_path = "/media/jculnan/backup/jculnan/datasets/asist_data2/metadata"
-    #json_path = "/media/jculnan/backup/jculnan/datasets/asist_data2/metadata/HSRData_TrialMessages_Trial-T000672_Team-TM000236_Member-na_CondBtwn-ASI-UAZ-TA1_CondWin-na_Vers-1.metadata"
 
     scores = get_series_of_participant_info(meta_path)
     save_scores(scores)
