@@ -17,3 +17,6 @@ participant_save_path = f"{base_path}/participant_info.csv"
 tipi_survey = f"{base_path}/HSRData_Surveys0Numeric_Trial-na_Team-na_Member-na_CondBtwn-na_CondWin-na_Vers-07132022.csv"
 tipi_file = f"{base_path}/personality_traits_for_all_participants.csv"
 sent_path = f"{base_path}/sent-emo"
+
+# file containing scores (from get_scores_from_metadata.py)
+scores = f"{base_path}/scores.csv"

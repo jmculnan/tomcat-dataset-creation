@@ -33,6 +33,7 @@ def proportion_of_items_sent_emo(mission_df):
 
     return sent_prop, emo_prop
 
+
 def get_series_of_proportions(data_path):
     """
     For a given directory, go through all mission files
@@ -44,11 +45,11 @@ def get_series_of_proportions(data_path):
 
 
 if __name__ == "__main__":
-    test_file = "/media/jculnan/backup/jculnan/datasets/asist_data2/sent-emo/CKJ_HSRData_TrialMessages_Trial-T000604_Team-TM000202_Member-na_CondBtwn-none_CondWin-na_Vers-6_correctedTranscripts.csv"
-
+    test_file = "/media/jculnan/backup/jculnan/datasets/asist_data2/combined_data_CORRECT9.21.22.csv"
     test = pd.read_csv(test_file)
 
-    proportion_of_items_per_class(test['sentiment'])
+    items_per_class = proportion_of_items_sent_emo(test)
+    print(items_per_class)
 
 
 

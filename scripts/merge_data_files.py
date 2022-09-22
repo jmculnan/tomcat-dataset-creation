@@ -51,7 +51,8 @@ def fix_labels(df):
               "sadeness": "sadness", "netural": "neutral", "negatve": "negative",
               "positie": "positive", "negatie": "negative", "poitive": "positive",
               "nutral": "neutral", "neative": "negative", "postive": "positive",
-              "postivie": "positive", "n": "neutral", "netral": "neutral", "negtive": "negative"}
+              "postivie": "positive", "n": "neutral", "netral": "neutral", "negtive": "negative",
+              "posiive": "positive"}
 
     df["emotion"] = df["emotion"].apply(lambda x: errors[x] if x in errors.keys() else x)
     df["sentiment"] = df["sentiment"].apply(lambda x: errors[x] if x in errors.keys() else x)

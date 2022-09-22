@@ -92,10 +92,38 @@ class MetadataToParticipantInfo:
         :param save_location: path + name of file to save participant info
         :return:
         """
-        with open(save_location, 'w') as f:
-            # write header
-            f.write("Team_ID,Trial_ID,participantid,playername\n")
-            for p_info in participant_info:
-                for player_info in p_info:
-                    f.write(",".join(player_info))
-                    f.write("\n")
+        participant_info.to_csv(save_location, index=False)
+
+        # print(participant_info)
+        # with open(save_location, 'w') as f:
+        #     # write header
+        #     f.write("Team_ID,Trial_ID,participantid,playername\n")
+        #     for p_info in participant_info:
+        #         print(p_info)
+        #         for player_info in p_info:
+        #             print(player_info)
+        #             f.write(",".join(player_info))
+        #             f.write("\n")
+
+
+def add_scores_to_participant_info(participant_df, scores_df):
+    """
+    Add scores from mission to the participant data
+    :param scores_df:
+    :return:
+    """
+    participant_df['Score'] = participant_df['Trial_ID'].map(scores_df.set_index('Trial_ID')['Score'])
+
+    return participant_df
+
+if __name__ == "__main__":
+    import pandas as pd
+
+    base_path = f"/media/jculnan/backup/jculnan/datasets/asist_data2"
+    participant_info = f"{base_path}/participant_info.csv"
+    scores = f"{base_path}/scores.csv"
+
+    part = pd.read_csv(participant_info)
+    sc = pd.read_csv(scores)
+
+    print(add_scores_to_participant_info(part, sc))
