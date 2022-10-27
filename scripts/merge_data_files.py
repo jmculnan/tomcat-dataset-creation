@@ -4,7 +4,7 @@ import os
 import pandas as pd
 
 
-def combine_files(annotations_dir, base_dir, dropna=False):
+def combine_files(annotations_dir, base_dir, dropna=False, save_name=None):
     """
     Combine files of corrected/annotated data
     """
@@ -21,7 +21,6 @@ def combine_files(annotations_dir, base_dir, dropna=False):
             team_id = csv_name_info[3].split("-")[-1]
 
             data = pd.read_csv(f"{annotations_dir}/{item}")
-            print(data.columns)
 
             data['trial_id'] = trial_id
             data['team_id'] = team_id
@@ -38,7 +37,10 @@ def combine_files(annotations_dir, base_dir, dropna=False):
                 all_files = pd.concat([all_files, data], axis=0)
 
     # todo: change to if saving required
-    all_files.to_csv(f"{base_dir}/all_sent-emo.csv", index=False)
+    if save_name is None:
+        all_files.to_csv(f"{base_dir}/all_sent-emo.csv", index=False)
+    else:
+        all_files.to_csv(f"{base_dir}/{save_name}", index=False)
 
     return all_files
 
@@ -64,4 +66,4 @@ if __name__ == "__main__":
     base_dir = "/media/jculnan/backup/jculnan/datasets/asist_data2"
     annotations = "/media/jculnan/backup/jculnan/datasets/asist_data2/combined"
 
-    combine_files(annotations, base_dir, dropna=True)
+    combine_files(annotations, base_dir, dropna=True, save_name="overall_sent-emo.csv")
