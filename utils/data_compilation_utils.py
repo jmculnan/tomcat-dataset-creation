@@ -164,10 +164,20 @@ class ToMCATDatasetPrep:
                 if "T0006" in name and "Vers-1" in name:
                     re.sub("Vers-1", "Vers-6", name)
                 print(name)
+
+                # get the sent-emo file
+                sentemo = pd.read_csv(f)
+
+                # see if there is a corresponding file
+                # with da annotations
                 if name in da_names:
-                    sentemo = pd.read_csv(f)
+                    # if so, only use subset of columns from sentemo
                     sentemo = sentemo[["utt", "participant", "message_id", "sentiment", "emotion"]]
+
+                    # read in da annotations file
                     da = pd.read_csv(self.da_dir / name)
+
+                    # make sure unique message_id is there
                     if "message_id" not in da.columns:
                         pass
 
@@ -189,20 +199,12 @@ class ToMCATDatasetPrep:
                             da.at[row.Index, 'emotion'] = ordered_emo[idx]
                             if "message-id" not in da.columns:
                                 da.at[row.Index, 'message_id'] = ordered_msg[idx]
-
-                        # if not pd.isnull(row.utt):
-                        #     if row.utt.strip() == ordered_utt[position].strip():
-                        #         da.at[row.Index, 'sentiment'] = ordered_sent[position]
-                        #         da.at[row.Index, 'emotion'] = ordered_emo[position]
-                        #         if "message-id" not in da.columns:
-                        #             da.at[row.Index, 'message_id'] = ordered_msg[position]
-                        #
-                        #         if position < len(ordered_utt) - 1:
-                        #             position += 1
-                        #         else:
-                        #             break
-
                     merged[name] = da
+                else:
+                    # if no da annotations
+                    # just save sentemo
+                    # todo: verify that this works
+                    merged[name] = sentemo
 
         return merged
 

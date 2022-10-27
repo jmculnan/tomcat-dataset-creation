@@ -94,17 +94,6 @@ class MetadataToParticipantInfo:
         """
         participant_info.to_csv(save_location, index=False)
 
-        # print(participant_info)
-        # with open(save_location, 'w') as f:
-        #     # write header
-        #     f.write("Team_ID,Trial_ID,participantid,playername\n")
-        #     for p_info in participant_info:
-        #         print(p_info)
-        #         for player_info in p_info:
-        #             print(player_info)
-        #             f.write(",".join(player_info))
-        #             f.write("\n")
-
 
 def add_scores_to_participant_info(participant_df, scores_df):
     """

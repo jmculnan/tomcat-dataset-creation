@@ -4,7 +4,7 @@ import pandas as pd
 import os
 
 
-def combine_group_of_sent_df_with_personality(sent_path, tipi_df):
+def combine_group_of_sent_df_with_personality(sent_path, tipi_df, drop_na=False):
     """
     Used to create separate combined files for each trial
     Saves the new files with names of sent-emo files
@@ -19,7 +19,8 @@ def combine_group_of_sent_df_with_personality(sent_path, tipi_df):
             sent_df['real_end'] = sent_df['end_timestamp'].apply(lambda x: get_end_in_sec(x))
 
             this_combined = combine_sent_with_personality(sent_df, tipi_df)
-            this_combined.dropna(subset=['sentiment', 'emotion'], inplace=True)
+            if drop_na:
+                this_combined.dropna(subset=['sentiment', 'emotion'], inplace=True)
 
             this_combined.to_csv(f"{sent_path}/{fname.split('_')[2]}_{fname.split('_')[3]}_gold.csv", index=False)
 
