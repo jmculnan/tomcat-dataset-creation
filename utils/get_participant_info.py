@@ -1,5 +1,6 @@
 # get participant information from the .metadata files
 import json
+import logging
 from pathlib import Path
 
 
@@ -28,9 +29,6 @@ class MetadataToParticipantInfo:
                     thedata = theline['data']
 
                     # get relevant info from this
-                    # map = thedata['map_name']
-                    # condition = thedata['condition']
-                    # exp = thedata['experiment_name']
                     try:
                         team, exp = thedata['name'].split("_")
                     except ValueError:
@@ -41,7 +39,6 @@ class MetadataToParticipantInfo:
                         else:
                             print(splitname)
                             exit()
-                    # agent = thedata['intervention_agents']
 
                     players = thedata['client_info']
                     for player in players:
@@ -51,18 +48,6 @@ class MetadataToParticipantInfo:
                         participant_info.append([team, exp, p_id, p_name])
 
                     break
-
-                    # p1_id = players[0]['participant_id']
-                    # p1_name = players[0]['playername']
-                    # p2_id = players[1]['participant_id']
-                    # p2_name = players[1]['playername']
-                    # p3_id = players[2]['participant_id']
-                    # p3_name = players[2]['playername']
-
-
-
-                    # participant_info = [team, exp, p1_id, p1_name, p2_id, p2_name,
-                    #                     p3_id, p3_name, map, condition, agent]
 
         return participant_info
 
@@ -78,9 +63,28 @@ class MetadataToParticipantInfo:
         for f in Path(self.base_path).iterdir():
             if f.suffix == ".metadata":
                 p_info = self._get_participant_info(str(f))
-                all_participant_info.append(p_info)
+                all_participant_info.extend(p_info)
+            else:
+                print(f"{f} not added to participant info")
 
         return all_participant_info
+
+    def return_trial_player_dict(self, participant_info):
+        """
+        Return a dict of Trial_ID: {Playername: Participant ID}
+        Used in conjunction with data compilation utils
+        To switch out player names for participant IDs
+        :return:
+        """
+        tp_dict = {}
+        if type(participant_info[0] == list):
+            for trial in participant_info:
+                if trial[1] not in tp_dict.keys():
+                    tp_dict[trial[1]] = {trial[3]: trial[2]}
+                else:
+                    tp_dict[trial[1]][trial[3]] = trial[2]
+
+        return tp_dict
 
     def save_participant_info(self, participant_info, save_location):
         """
@@ -88,20 +92,27 @@ class MetadataToParticipantInfo:
         :param save_location: path + name of file to save participant info
         :return:
         """
-        with open(save_location, 'w') as f:
-            # write header
-            f.write("Team_ID,Trial_ID,participantid,playername\n")
-            for p_info in participant_info:
-                for player_info in p_info:
-                    f.write(",".join(player_info))
-                    f.write("\n")
+        participant_info.to_csv(save_location, index=False)
 
+
+def add_scores_to_participant_info(participant_df, scores_df):
+    """
+    Add scores from mission to the participant data
+    :param scores_df:
+    :return:
+    """
+    participant_df['Score'] = participant_df['Trial_ID'].map(scores_df.set_index('Trial_ID')['Score'])
+
+    return participant_df
 
 if __name__ == "__main__":
-    json_path = "/home/jculnan/asist_data/metadata"
-    save_file = "/media/jculnan/backup/jculnan/datasets/asist_data2/participant_info.csv"
+    import pandas as pd
 
-    partinfo = MetadataToParticipantInfo(json_path)
+    base_path = f"/media/jculnan/backup/jculnan/datasets/asist_data2"
+    participant_info = f"{base_path}/participant_info.csv"
+    scores = f"{base_path}/scores.csv"
 
-    all_part_info = partinfo.get_info_on_multiple_trials()
-    partinfo.save_participant_info(all_part_info, save_file)
+    part = pd.read_csv(participant_info)
+    sc = pd.read_csv(scores)
+
+    print(add_scores_to_participant_info(part, sc))

@@ -62,22 +62,6 @@ def add_traits_to_id_df(id_df, tipi_df):
     info on each participant (ID, role, team, trials)
     """
     tipi_df2 = tipi_df[['participantid', 'max_trait', 'extroversion', 'agreeableness', 'conscientiousness', 'neuroticism', 'openness']]
-
     id_df = id_df.merge(tipi_df2, on="participantid")
 
     return id_df
-
-
-if __name__ == "__main__":
-    gold_survey = "/home/jculnan/asist_data/personality/HSRData_Surveys0Numeric_Trial-na_Team-na_Member-na_CondBtwn-na_CondWin-na_Vers-07132022.csv"
-
-    gold_data = pd.read_csv(gold_survey)
-
-    df = preprocess_tipi(gold_data)
-
-    id_path = "/media/jculnan/backup/jculnan/datasets/asist_data2/participant_info.csv"
-    id_df = pd.read_csv(id_path)
-
-    # combine
-    id_df2 = add_traits_to_id_df(id_df, df)
-    id_df2.to_csv("/media/jculnan/backup/jculnan/datasets/asist_data2/personality_traits_for_all_participants.csv", index=False)

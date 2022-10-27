@@ -164,10 +164,20 @@ class ToMCATDatasetPrep:
                 if "T0006" in name and "Vers-1" in name:
                     re.sub("Vers-1", "Vers-6", name)
                 print(name)
+
+                # get the sent-emo file
+                sentemo = pd.read_csv(f)
+
+                # see if there is a corresponding file
+                # with da annotations
                 if name in da_names:
-                    sentemo = pd.read_csv(f)
+                    # if so, only use subset of columns from sentemo
                     sentemo = sentemo[["utt", "participant", "message_id", "sentiment", "emotion"]]
+
+                    # read in da annotations file
                     da = pd.read_csv(self.da_dir / name)
+
+                    # make sure unique message_id is there
                     if "message_id" not in da.columns:
                         pass
 
@@ -189,22 +199,33 @@ class ToMCATDatasetPrep:
                             da.at[row.Index, 'emotion'] = ordered_emo[idx]
                             if "message-id" not in da.columns:
                                 da.at[row.Index, 'message_id'] = ordered_msg[idx]
-
-                        # if not pd.isnull(row.utt):
-                        #     if row.utt.strip() == ordered_utt[position].strip():
-                        #         da.at[row.Index, 'sentiment'] = ordered_sent[position]
-                        #         da.at[row.Index, 'emotion'] = ordered_emo[position]
-                        #         if "message-id" not in da.columns:
-                        #             da.at[row.Index, 'message_id'] = ordered_msg[position]
-                        #
-                        #         if position < len(ordered_utt) - 1:
-                        #             position += 1
-                        #         else:
-                        #             break
-
                     merged[name] = da
+                else:
+                    # if no da annotations
+                    # just save sentemo
+                    # todo: verify that this works
+                    merged[name] = sentemo
 
         return merged
+
+    def convert_values(self, conversion_dict):
+        """
+        Convert playernames to participant IDs
+        :param conversion_dict:
+        :return:
+        """
+        for k, v in self.merged.items():
+            trial = k.split("_")[2].split("-")[-1]
+            if trial not in conversion_dict.keys():
+                if trial == "T000607":
+                    conv = conversion_dict["T000608"]
+                elif trial == "T000633":
+                    conv = conversion_dict["T000634"]
+                else:
+                    exit(f"Trial {trial} not found")
+            else:
+                conv = conversion_dict[trial]
+            v['participant'] = v['participant'].apply(lambda x: conv[x])
 
     def save_merged(self):
         for k, v in self.merged.items():
@@ -226,9 +247,4 @@ if __name__ == "__main__":
     # print(emos)
     # print("Sentiment counts by class: ")
     # print(sents)
-
-    # get base directory
-    base = "/media/jculnan/backup/jculnan/datasets/asist_data2"
-
-    prep_obj = ToMCATDatasetPrep(base)
-    prep_obj.save_merged()
+    pass

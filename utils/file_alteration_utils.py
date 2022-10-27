@@ -70,7 +70,7 @@ def update_vers3_file_da(vers3_df, vers6_df, saved_name):
     vers6_df.to_csv(saved_name, index=False)
 
 
-def update_multiple_vers3_files(path_to_vers3, path_to_vers6):
+def update_multiple_vers3_files(path_to_vers3, path_to_vers6, kind="da"):
     """
     Update a group of vers3 files
     :param path_to_vers3:
@@ -88,7 +88,10 @@ def update_multiple_vers3_files(path_to_vers3, path_to_vers6):
             v6_name = "_".join(v6_name.split("_")[1:])
             vers6_df = pd.read_csv(f"{path_to_vers6}/{v6_name}")
 
-            update_vers3_file(vers3_df, vers6_df, f"{path}/{v3_annotator}_{v6_name}")
+            if kind == "da":
+                update_vers3_file_da(vers3_df, vers6_df, f"{path}/{v3_annotator}_{v6_name}")
+            else:
+                update_vers3_file_sentemo(vers3_df, vers6_df, f"{path}/{v3_annotator}_{v6_name}")
 
 
 if __name__ == "__main__":
