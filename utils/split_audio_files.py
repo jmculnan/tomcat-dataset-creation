@@ -66,7 +66,9 @@ def split_wav_into_utterances(path_to_sound_file, sound_file, wav_level_df):
         end_timestamp = wav_level_df["end_timestamp"].tolist()
 
         for i, item in enumerate(row_names):
-            extract_portions_of_mp4_or_wav(path_to_sound_file, sound_file,
+            # remove utterances without unique ids
+            if f"{item}.wav" != "nan.wav":
+                extract_portions_of_mp4_or_wav(path_to_sound_file, sound_file,
                                            start_times[i], end_timestamp[i],
                                            save_path=f"{path_to_sound_file}/../split",
                                            short_file_name=f"{item}.wav")
@@ -87,6 +89,6 @@ def split_wavs_into_utterances(path_to_sound_files, df_with_timestamps):
 if __name__ == "__main__":
     base_path = "/media/jculnan/backup/jculnan/datasets/asist_data2"
     wav_path = f"{base_path}/audio"
-    df = pd.read_csv(f"{base_path}/all_sent-emo.csv")
+    df = pd.read_csv(f"{base_path}/overall_sent-emo.csv")
 
     split_wavs_into_utterances(wav_path, df)
