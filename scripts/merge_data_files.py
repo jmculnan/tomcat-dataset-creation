@@ -46,7 +46,6 @@ def combine_files(annotations_dir, base_dir, dropna=False, save_name=None):
 
 
 def fix_labels(df):
-    df.columns = df.columns.str.lower()
     df['emotion'] = df['emotion'].apply(lambda x: str(x).strip())
     df['sentiment'] = df['sentiment'].apply(lambda x: str(x).strip())
 
