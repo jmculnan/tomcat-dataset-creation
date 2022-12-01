@@ -12,6 +12,9 @@ def get_participant_info(json_path):
     """
     print(json_path)
     with FileReadBackwards(json_path, encoding="utf-8") as json_file:
+        # get trial number
+        trial = str(json_path).split("/")[-1].split("_")[2].split("-")[-1]
+        participant_info = [trial, ""]
         # find the last mention of team_score_agg
         for l in json_file:
             # if line is the metadata line with IDs
@@ -19,8 +22,6 @@ def get_participant_info(json_path):
 
             if "team_score_agg" in theline["data"].keys():
                 score = theline["data"]["team_score_agg"]
-
-                trial = str(json_path).split("/")[-1].split("_")[2].split("-")[-1]
 
                 participant_info = [trial, score]
 
@@ -57,8 +58,9 @@ def save_scores(list_of_scores, save_path=None):
 
 
 if __name__ == "__main__":
-    meta_path = "/media/jculnan/backup/jculnan/datasets/asist_data2/metadata"
+    #meta_path = "/media/jculnan/backup/jculnan/datasets/asist_data2/metadata"
+    meta_path = "/media/jculnan/datadrive/asist_data_copy/metadata"
 
     scores = get_series_of_participant_info(meta_path)
-    save_scores(scores)
+    save_scores(scores, save_path="/media/jculnan/datadrive/asist_data_copy/scores.csv")
 

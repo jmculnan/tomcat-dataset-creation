@@ -5,12 +5,14 @@ import sys
 sys.path.append("/home/jculnan/github/tomcat-dataset-creation")
 
 # save base path
-base_path = "/media/jculnan/backup/jculnan/datasets/asist_data2"
+# base_path = "/media/jculnan/backup/jculnan/datasets/asist_data2"
+base_path = "/media/jculnan/datadrive/asist_data_copy"
 
 # location of metadata files
 metadata_path = f"{base_path}/metadata"
 
 # where to save participant information
+participant_info_already_saved = False
 participant_save_path = f"{base_path}/participant_info.csv"
 
 # tipi results

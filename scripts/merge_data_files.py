@@ -46,6 +46,7 @@ def combine_files(annotations_dir, base_dir, dropna=False, save_name=None):
 
 
 def fix_labels(df):
+    df.columns = df.columns.str.lower()
     df['emotion'] = df['emotion'].apply(lambda x: str(x).strip())
     df['sentiment'] = df['sentiment'].apply(lambda x: str(x).strip())
 
@@ -63,7 +64,7 @@ def fix_labels(df):
 
 
 if __name__ == "__main__":
-    base_dir = "/media/jculnan/backup/jculnan/datasets/asist_data2"
-    annotations = "/media/jculnan/backup/jculnan/datasets/asist_data2/combined"
+    base_dir = "/media/jculnan/datadrive/asist_data_copy"
+    annotations = "/media/jculnan/datadrive/asist_data_copy/combined"
 
     combine_files(annotations, base_dir, dropna=True, save_name="overall_sent-emo.csv")

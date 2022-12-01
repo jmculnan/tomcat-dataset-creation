@@ -28,14 +28,15 @@ if __name__ == "__main__":
     scores_df = pd.read_csv(config.scores)
     participant_tipi_info = add_scores_to_participant_info(participant_tipi_info, scores_df)
 
-    # todo: make this optional
-    # partinfo.save_participant_info(participant_tipi_info, config.participant_save_path)
+    # save participant info if it's not already saved
+    if not config.participant_info_already_saved:
+        partinfo.save_participant_info(participant_tipi_info, config.participant_save_path)
 
     # get the dict to convert playername to participant ID
     pid2namedict = partinfo.return_trial_player_dict(all_part_info)
 
     # contains columns:  team_id	trial_id	participantid	participant_role	role_name	max_trait
-    tipi = pd.read_csv(config.tipi_file)
+    # tipi = pd.read_csv(config.tipi_file)
 
     # combine sent with personality
     # fixme: this might not be doing anything
