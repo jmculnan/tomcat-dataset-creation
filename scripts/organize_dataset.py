@@ -38,10 +38,6 @@ if __name__ == "__main__":
     # contains columns:  team_id	trial_id	participantid	participant_role	role_name	max_trait
     # tipi = pd.read_csv(config.tipi_file)
 
-    # combine sent with personality
-    # fixme: this might not be doing anything
-    # combine_group_of_sent_df_with_personality(config.sent_path, tipi)
-
     # create dataset / replace playername with participant ID
     prep_obj = ToMCATDatasetPrep(config.base_path)
     prep_obj.convert_values(pid2namedict)
