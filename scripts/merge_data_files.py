@@ -36,7 +36,16 @@ def combine_files(annotations_dir, base_dir, dropna=False, save_name=None):
             else:
                 all_files = pd.concat([all_files, data], axis=0)
 
-    # todo: change to if saving required
+    # rename 'label' to "DA"
+    all_files.rename(columns={"label": "DA"}, inplace=True)
+
+    # reorder columns as follows
+    # team, trial, message_id, start_timestamp, end_timestamp, utt,
+    # corr_utt, label=da_label, AP, emotion, sentiment, notes
+    all_files = all_files[["team_id", "trial_id", "message_id", "start_timestamp",
+                          "end_timestamp", "utt", "corr_utt", "DA",
+                          "AP", "emotion", "sentiment", "notes"]]
+
     if save_name is None:
         all_files.to_csv(f"{base_dir}/all_sent-emo.csv", index=False)
     else:
