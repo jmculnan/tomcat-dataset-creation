@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from transformers import RobertaTokenizerFast, RobertaForSequenceClassification
+from transformers import RobertaTokenizerFast, RobertaTokenizer, RobertaModel, RobertaForSequenceClassification
 
 
 class RobertaBase(nn.Module):
@@ -14,8 +14,9 @@ class RobertaBase(nn.Module):
 
         self.device = device
 
-        self.model = RobertaForSequenceClassification.from_pretrained('roberta-base')
-        self.tokenizer = RobertaTokenizerFast.from_pretrained('roberta-base', max_length = 256)
+        # self.model = RobertaForSequenceClassification.from_pretrained('roberta-base')
+        self.model = RobertaModel.from_pretrained('roberta-base')
+        self.tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
 
     def forward(self, text_inputs):
         # tokenize and complete forward pass with roberta over the batch of inputs
@@ -26,25 +27,26 @@ class RobertaBase(nn.Module):
         for item in text_inputs:
             if type(item) == list:
                 item = " ".join(item)
-            text = self.tokenizer.encode(item,
+            text = self.tokenizer(item,
                                   add_special_tokens=True,
-                                  padding=True,
                                   truncation=True,
-                                  max_length=256)
+                                  max_length=32,   # 256,
+                                  padding="max_length")
             # add to holder
-            batch_ids.append(text["ids"])
-            batch_masks.append(text["masks"])
+            batch_ids.append(text["input_ids"])
+            batch_masks.append(text["attention_mask"])
 
         # convert to tensor for use with model
         batch_ids = torch.tensor(batch_ids).to(self.device, dtype=torch.long)
         batch_masks = torch.tensor(batch_masks).to(self.device, dtype=torch.long)
-        # todo: is this needed?
-        # token_type_ids = text["token_type_ids"].to(self.device, dtype=torch.long),
 
-        out = self.model(input_ids=batch_ids, attention_mask=batch_masks, output_hidden_states=True)
-        print(f"Size of hidden state returned to model: {out.hidden_states[-1].shape()}")
+        # feed through the model
+        roberta_out = self.model(input_ids=batch_ids, attention_mask=batch_masks)
 
-        return out.hidden_states[-1]
+        # return either pooled output or last hidden state for cls token
+        # to get pooled output, use roberta_out['pooler_output']
+        # to get cls last hidden, use roberta_out['last_hidden_state][:, 0, :]
+        return roberta_out['pooler_output']
 
 
 class MultimodalModelBase(nn.Module):
