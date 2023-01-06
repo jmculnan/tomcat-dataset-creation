@@ -1,10 +1,24 @@
 # baseline model for sentiment and emotion classification
-import sys
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from transformers import RobertaTokenizerFast, RobertaForSequenceClassification
+
+
+class RobertaBase(nn.Module):
+
+    def __init__(self):
+        super(RobertaBase, self).__init__()
+
+        self.model = RobertaForSequenceClassification.from_pretrained('roberta-base', cls_token="[CLS]",
+                                                                      sep_token="[SEP]")
+        self.tokenizer = RobertaTokenizerFast.from_pretrained('roberta-base', max_length = 256)
+
+    def forward(self, text_inputs):
+        # tokenize and complete forward pass with roberta over the batch of inputs
+        self.tokenizer.tokenize()
 
 class MultimodalModelBase(nn.Module):
     """
@@ -40,7 +54,7 @@ class MultimodalModelBase(nn.Module):
         )
 
         # set the size of the input into the fc layers
-        if params.avgd_acoustic or params.add_avging:
+        if params.add_avging:
             # set size of input dim
             self.fc_input_dim = params.text_gru_hidden_dim + params.audio_dim
             # set size of hidden

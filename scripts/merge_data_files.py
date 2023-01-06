@@ -42,7 +42,7 @@ def combine_files(annotations_dir, base_dir, dropna=False, save_name=None):
     # reorder columns as follows
     # team, trial, message_id, start_timestamp, end_timestamp, utt,
     # corr_utt, label=da_label, AP, emotion, sentiment, notes
-    all_files = all_files[["team_id", "trial_id", "message_id", "start_timestamp",
+    all_files = all_files[["team_id", "trial_id", "participant", "message_id", "start_timestamp",
                           "end_timestamp", "utt", "corr_utt", "DA",
                           "AP", "emotion", "sentiment", "notes"]]
 

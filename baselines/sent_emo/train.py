@@ -11,7 +11,7 @@ import pickle
 
 # import MultitaskObject and Glove from preprocessing code
 sys.path.append("/home/jculnan/github/multimodal_data_preprocessing")
-from utils.data_prep_helpers import MultitaskObject, Glove, make_glove_dict #, convert_to_ternary
+from utils.data_prep_helpers import MultitaskObject
 
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
@@ -29,13 +29,13 @@ def train_and_predict(
     num_epochs,
     optimizer,
     device="cpu",
-    avgd_acoustic=True,
 ):
     """
         Train_ds_list and val_ds_list are lists of MultTaskObject objects!
         Length of the list is the number of datasets used
         """
     num_tasks = 2
+    best_f1 = 0.0
 
     print(f"Number of tasks: {num_tasks}")
     # get a list of the tasks by number
@@ -53,13 +53,12 @@ def train_and_predict(
         train_state["epoch_index"] = epoch_index
 
         # get running loss, holders of ys and predictions on training partition
-        running_loss, ys_holder, preds_holder = run_model_multitask_singledataset(
+        running_loss, ys_holder, preds_holder = run_model(
             dataset,
             classifier,
             batch_size,
             num_tasks,
             device,
-            avgd_acoustic,
             optimizer,
             mode="training",
         )
@@ -77,17 +76,17 @@ def train_and_predict(
             train_state["train_avg_f1"][task].append(task_avg_f1[2])
 
         # get running loss, holders of ys and predictions on dev partition
-        running_loss, ys_holder, preds_holder = run_model_multitask_singledataset(
+        running_loss, ys_holder, preds_holder = run_model(
             dataset,
             classifier,
             batch_size,
             num_tasks,
             device,
-            avgd_acoustic,
             optimizer,
             mode="eval",
         )
 
+        all_avg_f1s = []
         # get precision, recall, f1 info
         for task in preds_holder.keys():
             task_avg_f1 = precision_recall_fscore_support(
@@ -98,9 +97,14 @@ def train_and_predict(
             train_state["val_avg_f1"][task].append(task_avg_f1[2])
             if task_avg_f1[2] > train_state["val_best_f1"][task]:
                 train_state["val_best_f1"][task] = task_avg_f1[2]
+            all_avg_f1s.append(task_avg_f1[2])
 
-        # every 5 epochs, print out a classification report on validation set
-        if epoch_index % 5 == 0:
+        # print out classification report if the model will update
+        avg_f1_t = sum(all_avg_f1s) / len(all_avg_f1s)
+
+        if avg_f1_t > best_f1:
+            best_f1 = avg_f1_t
+
             for task in preds_holder.keys():
                 print(f"Classification report and confusion matrix for task {task}:")
                 print(confusion_matrix(ys_holder[task], preds_holder[task]))
@@ -126,13 +130,12 @@ def train_and_predict(
         sys.stdout.flush()
 
 
-def run_model_multitask_singledataset(
+def run_model(
     dataset,
     classifier,
     batch_size,
     num_tasks,
     device,
-    avgd_acoustic,
     optimizer,
     mode="training",
 ):
@@ -140,8 +143,6 @@ def run_model_multitask_singledataset(
     Run the model in either training or testing within a single epoch
     Returns running_loss, gold labels, and predictions
     """
-    batch_task = None
-
     first = datetime.now()
 
     # Iterate over training dataset
@@ -178,17 +179,14 @@ def run_model_multitask_singledataset(
             optimizer.zero_grad()
 
         # get ys and predictions for the batch
-        y_gold, batch_pred = get_asist_predictions(
+        y_gold = batch["ys"]
+        batch_pred = predict(
             batch,
-            batch_index,
             classifier,
             device,
-            avgd_acoustic,
-            tasks,
-            dataset,
         )
 
-        # calculate loss
+        # calculate loss for each task
         for task, preds in enumerate(batch_pred):
             loss = dataset.loss_fx(preds, y_gold[task])
             loss_t = loss.item()
@@ -216,24 +214,17 @@ def run_model_multitask_singledataset(
     return running_loss, ys_holder, preds_holder
 
 
-def get_asist_predictions(
+def predict(
     batch,
-    batch_index,
     classifier,
     device,
-    avgd_acoustic,
-    tasks,
-    datasets_list,
 ):
     """
-    Get predictions from asist data ON THREE TASKS
-    This should abstract train and dev into a single function
+    Get predictions from MultiCAT data
     Used with multitask networks
     """
     # get parts of batches
     # get data
-    y_gold = batch["ys"]
-
     batch_acoustic = batch["x_acoustic"].detach().to(device)
     batch_text = batch["x_utt"].detach().to(device)
 
@@ -249,7 +240,7 @@ def get_asist_predictions(
         acoustic_len_input=batch_acoustic_lengths,
     )
 
-    return y_gold, batch_pred
+    return batch_pred
 
 
 def load_data(config):
@@ -350,7 +341,6 @@ def finetune(dataset, device, output_path, config):
         model_params.num_epochs,
         optimizer,
         device,
-        avgd_acoustic=avgd_acoustic_in_network,
     )
 
     # plot the loss and accuracy curves
@@ -382,7 +372,7 @@ def finetune(dataset, device, output_path, config):
 
 if __name__ == "__main__":
     # import parameters for model
-    import tomcat_speech.parameters.multitask_config as config
+    import baselines.sent_emo.baseline_config as config
 
     device = set_cuda_and_seeds(config)
 
@@ -411,4 +401,4 @@ if __name__ == "__main__":
         if not config.DEBUG:
             sys.stdout = f
 
-            finetune(data, loss_fx, device, output_path, config)
+        finetune(data, device, output_path, config)
