@@ -30,6 +30,9 @@ def combine_files(annotations_dir, base_dir, dropna=False, save_name=None):
             # if we want to remove null sent/emo
             if dropna:
                 data.dropna(subset=['sentiment', 'emotion'], inplace=True)
+            else:
+                # convert na to ""
+                data.fillna(subset=['sentiment', 'emotion'], inplace=True)
 
             if all_files is None:
                 all_files = data
@@ -40,8 +43,6 @@ def combine_files(annotations_dir, base_dir, dropna=False, save_name=None):
     all_files.rename(columns={"label": "DA"}, inplace=True)
 
     # reorder columns as follows
-    # team, trial, message_id, start_timestamp, end_timestamp, utt,
-    # corr_utt, label=da_label, AP, emotion, sentiment, notes
     all_files = all_files[["team_id", "trial_id", "participant", "message_id", "start_timestamp",
                           "end_timestamp", "utt", "corr_utt", "DA",
                           "AP", "emotion", "sentiment", "notes"]]
