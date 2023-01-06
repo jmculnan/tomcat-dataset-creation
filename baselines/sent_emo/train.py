@@ -310,7 +310,7 @@ def finetune(dataset, device, output_path, config):
     )
 
     # this uses train-dev-test folds
-    multitask_model = MultitaskModel(model_params)
+    multitask_model = MultitaskModel(model_params, device)
 
     optimizer = torch.optim.Adam(
         lr=model_params.lr,
