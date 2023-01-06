@@ -3,6 +3,8 @@ import os
 import subprocess as sp
 from pathlib import Path
 import pandas as pd
+import re
+
 
 def extract_portions_of_mp4_or_wav(
     path_to_sound_file,
@@ -61,6 +63,12 @@ def split_wav_into_utterances(path_to_sound_file, sound_file, wav_level_df):
     """
     wav_level_df.dropna(subset=["start_timestamp", "end_timestamp"], inplace=True)
     if len(wav_level_df) > 0:
+        # add 250ms to start and end timestamps
+        # to ensure we don't have any completely empty items
+        # due to the timestamp rounding Google uses
+        wav_level_df["start_timestamp"] = wav_level_df["start_timestamp"].apply(lambda x: x + .250)
+
+
         row_names = wav_level_df["message_id"].tolist()
         start_times = wav_level_df["start_timestamp"].tolist()
         end_timestamp = wav_level_df["end_timestamp"].tolist()
@@ -84,6 +92,20 @@ def split_wavs_into_utterances(path_to_sound_files, df_with_timestamps):
             if wav_trial in all_trials:
                 short_df = df_with_timestamps[df_with_timestamps["trial_id"] == wav_trial]
                 split_wav_into_utterances(item.parents[0], item.name, short_df)
+
+
+def convert_timestring_to_seconds(timestring):
+    # convert a string representation of time to seconds
+    # may be mm:ss, m:ss, mm:s, mm:ss:--
+    time_sep = re.split(':|"', timestring)
+    time_sep = [item for item in time_sep if item]  # removes empty strings
+    if len(time_sep) == 1:
+        return float(time_sep[0])
+    elif len(time_sep) > 2:
+        time_sep = time_sep[:2]
+    return float(time_sep[0]) * 60 + float(time_sep[1])
+
+
 
 
 if __name__ == "__main__":
