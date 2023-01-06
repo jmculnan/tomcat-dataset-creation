@@ -33,7 +33,7 @@ glove_path = "/media/jculnan/One Touch/jculnan/datasets/glove/glove.subset.300d.
 if USE_SERVER:
     load_path = "/data/nlp/corpora/MM/pickled_data/distilbert_custom_feats"
 else:
-    load_path = "/media/jculnan/One Touch/jculnan/datasets/MultiCAT"
+    load_path = "/media/jculnan/One Touch/jculnan/datasets"
 
 # set directory to save full experiments
 exp_save_path = "output/multitask"
@@ -107,7 +107,7 @@ model_params = Namespace(
     bidirectional=True,
 
     # input dimension parameters
-    text_dim=300,  # text vector length # 768 for bert/distilbert, 300 for glove
+    text_dim=768,  # text vector length # 768 for bert/distilbert, 300 for glove
     short_emb_dim=30,  # length of trainable embeddings vec
     # how long is each audio input -- set by the number of acoustic features above
     audio_dim=num_feats,  # audio vector length

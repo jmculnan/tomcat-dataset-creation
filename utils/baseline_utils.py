@@ -82,6 +82,36 @@ class DataIngester:
         return combined.to_dict(orient='records')
 
 
+class MultitaskObject(object):
+    """
+    An object to hold the data and meta-information for each of the datasets/tasks
+    """
+
+    def __init__(
+        self,
+        train_data,
+        dev_data,
+        test_data,
+        class_loss_func,
+    ):
+        """
+        train_data, dev_data, and test_data are DatumListDataset datasets
+        """
+        self.train = train_data
+        self.dev = dev_data
+        self.test = test_data
+        self.loss_fx = class_loss_func
+        self.loss_multiplier = 1
+
+    def change_loss_multiplier(self, multiplier):
+        """
+        Add a different loss multiplier to task
+        This will be used as a multiplier for loss in multitask network
+        e.g. if weight == 1.5, loss = loss * 1.5
+        """
+        self.loss_multiplier = multiplier
+
+
 def combine_modality_data(list_of_modality_data):
     """
     Use a list of lists of dicts (each of which contains info on a modality)
@@ -102,7 +132,7 @@ def combine_modality_data(list_of_modality_data):
     return list(all_data.values())
 
 
-def get_all_batches(dataset_list, batch_size, shuffle, partition="train", sampler=None):
+def get_all_batches(dataset, batch_size, shuffle, partition="train"):
     """
     Create all batches and put them together as a single dataset
     """
@@ -110,49 +140,22 @@ def get_all_batches(dataset_list, batch_size, shuffle, partition="train", sample
     all_batches = []
     all_loss_funcs = []
 
-    # get number of tasks
-    num_tasks = len(dataset_list)
+    if partition == "train":
+        data = DataLoader(
+            dataset.train, batch_size=batch_size, shuffle=shuffle
+        )
+    elif partition == "dev" or partition == "val":
+        data = DataLoader(
+            dataset.dev, batch_size=batch_size, shuffle=shuffle
+        )
+    elif partition == "test":
+        data = DataLoader(
+            dataset.test, batch_size=batch_size, shuffle=shuffle
+        )
+    else:
+        sys.exit(f"Error: data partition {partition} not found")
 
-    # batch the data for each task
-    for i in range(num_tasks):
-        if partition == "train":
-            # (over)sample training data if needed
-            if sampler is not None:
-                dataset_list[i].train = sampler.prep_data_through_oversampling(dataset_list[i].train)
-            data = DataLoader(
-                dataset_list[i].train, batch_size=batch_size, shuffle=shuffle
-            )
-        elif partition == "dev" or partition == "val":
-            data = DataLoader(
-                dataset_list[i].dev, batch_size=batch_size, shuffle=shuffle
-            )
-        elif partition == "test":
-            data = DataLoader(
-                dataset_list[i].test, batch_size=batch_size, shuffle=shuffle
-            )
-        else:
-            sys.exit(f"Error: data partition {partition} not found")
-        loss_func = dataset_list[i].loss_fx
-        # put batches together
-        all_batches.append(data)
-        all_loss_funcs.append(loss_func)
-
-    randomized_batches = []
-    randomized_tasks = []
-
-    # randomize batches
-    task_num = 0
-    for batches in all_batches:
-        for i, batch in enumerate(batches):
-            randomized_batches.append(batch)
-            randomized_tasks.append(task_num)
-        task_num += 1
-
-    zipped = list(zip(randomized_batches, randomized_tasks))
-    random.shuffle(zipped)
-    randomized_batches, randomized_tasks = list(zip(*zipped))
-
-    return randomized_batches, randomized_tasks
+    return data
 
 
 def make_train_state(learning_rate, model_save_file, early_stopping_criterion):

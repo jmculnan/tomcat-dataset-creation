@@ -37,7 +37,7 @@ class MultimodalModelBase(nn.Module):
         self.out_dims = params.output_dim
 
         self.text_rnn = nn.LSTM(
-            input_size=self.text_input_size,
+            input_size=params.text_dim,
             hidden_size=params.text_gru_hidden_dim,
             num_layers=params.num_gru_layers,
             batch_first=True,
@@ -48,29 +48,21 @@ class MultimodalModelBase(nn.Module):
         self.acoustic_rnn = nn.LSTM(
             input_size=params.audio_dim,
             hidden_size=params.acoustic_gru_hidden_dim,
-            num_layers=params.num_acoustic_rnn_lyrs,
+            num_layers=params.num_gru_layers,
             batch_first=True,
             bidirectional=True,
         )
 
-        # set the size of the input into the fc layers
-        if params.add_avging:
-            # set size of input dim
-            self.fc_input_dim = params.text_gru_hidden_dim + params.audio_dim
-            # set size of hidden
-            self.fc_hidden = 50
-            # set acoustic fc layer 1
-            self.acoustic_fc_1 = nn.Linear(params.audio_dim, self.fc_hidden)
-            # self.ac_fc_batch_norm = nn.BatchNorm1d(self.fc_hidden)
-        else:
-            # set size of input dim
-            self.fc_input_dim = (
-                params.text_gru_hidden_dim + params.acoustic_gru_hidden_dim
-            )
-            # set size of hidden
-            self.fc_hidden = 100
-            # set acoustic fc layer 1
-            self.acoustic_fc_1 = nn.Linear(params.fc_hidden_dim, self.fc_hidden)
+        # set size of input dim
+        self.fc_input_dim = (
+            params.text_gru_hidden_dim + params.acoustic_gru_hidden_dim
+        )
+        # set size of hidden
+        self.fc_hidden = 100
+        # set acoustic fc layer 1
+        # todo: change after testing
+        self.acoustic_fc_1 = nn.Linear(params.audio_dim, self.fc_hidden)
+        # self.acoustic_fc_1 = nn.Linear(params.fc_hidden_dim, self.fc_hidden)
 
         # set acoustic fc layer 2
         self.acoustic_fc_2 = nn.Linear(self.fc_hidden, params.audio_dim)
@@ -78,16 +70,6 @@ class MultimodalModelBase(nn.Module):
         # initialize speaker, gender embeddings
         self.speaker_embedding = None
         self.gender_embedding = None
-
-        if params.use_speaker:
-            self.fc_input_dim = self.fc_input_dim + params.speaker_emb_dim
-            self.speaker_embedding = nn.Embedding(
-                params.num_speakers, params.speaker_emb_dim
-            )
-
-        elif params.use_gender:
-            self.fc_input_dim = self.fc_input_dim + params.gender_emb_dim
-            self.gender_embedding = nn.Embedding(3, params.gender_emb_dim)
 
         # set number of classes
         self.output_dim = params.output_dim
@@ -108,28 +90,19 @@ class MultimodalModelBase(nn.Module):
         length_input=None,
         acoustic_len_input=None,
     ):
-        # using pretrained embeddings, so detach to not update weights
-        # embs: (batch_size, seq_len, emb_dim)
-        if not self.use_distilbert:
-            embs = F.dropout(self.embedding(text_input), 0.1).detach()
-
-            short_embs = F.dropout(self.short_embedding(text_input), 0.1)
-
-            all_embs = torch.cat((embs, short_embs), dim=2)
-        else:
-            all_embs = text_input
-
         # flatten_parameters() decreases memory usage
         self.text_rnn.flatten_parameters()
 
-        packed = nn.utils.rnn.pack_padded_sequence(
-            all_embs, length_input, batch_first=True, enforce_sorted=False
-        )
-
-        # feed embeddings through GRU
-        packed_output, (hidden, cell) = self.text_rnn(packed)
-        encoded_text = F.dropout(hidden[-1], 0.3)
-        # encoded_text = self.text_batch_norm(encoded_text)
+        if type(text_input) == torch.tensor:
+            packed = nn.utils.rnn.pack_padded_sequence(
+                text_input, length_input, batch_first=True, enforce_sorted=False
+            )
+            # feed embeddings through GRU
+            packed_output, (hidden, cell) = self.text_rnn(packed)
+            encoded_text = F.dropout(hidden[-1], 0.3)
+        else:
+            # todo: add call to roberta model here!
+            pass
 
         if acoustic_len_input is not None:
             print("acoustic length input is used")

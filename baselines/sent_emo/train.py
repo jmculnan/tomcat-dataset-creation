@@ -10,14 +10,13 @@ from datetime import date, datetime
 import pickle
 
 # import MultitaskObject and Glove from preprocessing code
-sys.path.append("/home/jculnan/github/multimodal_data_preprocessing")
-from utils.data_prep_helpers import MultitaskObject
+sys.path.append("/home/jculnan/github/tomcat-dataset-creation")
 
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.metrics import precision_recall_fscore_support
 
-from utils.baseline_utils import update_train_state, get_all_batches, make_train_state, set_cuda_and_seeds, plot_train_dev_curve, combine_modality_data, DataIngester
+from utils.baseline_utils import update_train_state, get_all_batches, make_train_state, set_cuda_and_seeds, plot_train_dev_curve, combine_modality_data, DataIngester, MultitaskObject
 from baselines.sent_emo.model import MultitaskModel
 
 
@@ -151,12 +150,12 @@ def run_model(
     # set classifier(s) to appropriate mode
     if mode.lower() == "training" or mode.lower() == "train":
         classifier.train()
-        batches, tasks = get_all_batches(
+        batches = get_all_batches(
             dataset, batch_size=batch_size, shuffle=True
         )
     else:
         classifier.eval()
-        batches, tasks = get_all_batches(
+        batches = get_all_batches(
             dataset, batch_size=batch_size, shuffle=True, partition="dev"
         )
 
@@ -226,7 +225,10 @@ def predict(
     # get parts of batches
     # get data
     batch_acoustic = batch["x_acoustic"].detach().to(device)
-    batch_text = batch["x_utt"].detach().to(device)
+    if type(batch["x_utt"]) == torch.tensor:
+        batch_text = batch["x_utt"].detach().to(device)
+    else:
+        batch_text = batch["x_utt"]
 
     batch_lengths = batch["utt_length"]
     batch_acoustic_lengths = batch["acoustic_length"]
@@ -237,7 +239,7 @@ def predict(
         acoustic_input=batch_acoustic,
         text_input=batch_text,
         length_input=batch_lengths,
-        acoustic_len_input=batch_acoustic_lengths,
+        acoustic_len_input=None,  # todo: change after testing
     )
 
     return batch_pred
@@ -286,11 +288,6 @@ def load_data(config):
 
 def finetune(dataset, device, output_path, config):
     model_params = config.model_params
-
-    # decide if you want to use avgd feats
-    avgd_acoustic_in_network = (
-            model_params.avgd_acoustic or model_params.add_avging
-    )
 
     # 3. CREATE NN
     print(model_params)
