@@ -90,7 +90,7 @@ model_params = Namespace(
     # the maximum number of epochs that a model can run
     num_epochs=100,
     # the minibatch size
-    batch_size=100,  # 128,  # 32
+    batch_size=4,  # 128,  # 32
     # how many epochs the model will run after updating
     early_stopping_criterion=20,
 

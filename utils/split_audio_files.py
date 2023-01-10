@@ -38,18 +38,19 @@ def extract_portions_of_mp4_or_wav(
     os.system(f'if [ ! -d "{save_path}" ]; then mkdir -p {save_path}; fi')
 
     # get shortened version of file
-    sp.run(
-        [
-            "ffmpeg",
-            "-i",
-            full_sound_path,
-            "-ss",
-            str(start_time),
-            "-to",
-            str(end_time),
-            str(save_name),
-        ]
-    )
+    if not os.path.exists(save_name):
+        sp.run(
+            [
+                "ffmpeg",
+                "-i",
+                full_sound_path,
+                "-ss",
+                str(start_time),
+                "-to",
+                str(end_time),
+                str(save_name),
+            ]
+        )
 
     return save_name
 
@@ -121,6 +122,6 @@ def convert_timestring_to_seconds(timestring):
 if __name__ == "__main__":
     base_path = "/media/jculnan/One Touch/jculnan/datasets/MultiCAT"
     wav_path = f"{base_path}/individual_speaker_audio"
-    df = pd.read_csv(f"{base_path}/processed_dataset.csv")
+    df = pd.read_csv(f"{base_path}/processed_dataset_updated.csv")
 
     split_wavs_into_utterances(wav_path, df)
